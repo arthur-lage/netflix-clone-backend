@@ -1,10 +1,11 @@
 const express = require("express")
 const router = express.Router()
+const bcrypt = require("bcrypt")
 
 const Account = require("../model/Account")
 
-router.get("/", (req, res) => {
-    let existentAccounts = Account.find()
+router.get("/", async (req, res) => {
+    let existentAccounts = await Account.find()
     res.send(existentAccounts)
 })
 
@@ -13,23 +14,31 @@ router.post("/register", (req, res) => {
     const email = req.body.email
     const password = req.body.password
 
-    const newUser = {
-        name: name,
-        email: email,
-        password: password
-    }
+    const salt = 10
 
-    Account.create(newUser, function (err, result) {
+    bcrypt.hash(password, salt, (err, hash) => {
         if(err){
             console.log(err)
+            res.send(err)
         } else {
-            res.send("Account created successfully")
+            Account.create({name: name, email: email, password: hash}, function (err, result) {
+                if(err){
+                    console.log(err)
+                } else {
+                    res.send(result)
+                }
+            })
         }
     })
 })
 
 router.post("/login", (req, res) => {
     
+})
+
+router.delete("/delete", async (req, res) => {
+    await Account.deleteMany({})
+    res.send("Deleted")
 })
 
 module.exports = router
